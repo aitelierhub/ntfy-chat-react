@@ -1,2 +1,2 @@
-# https-github.com-aitelierhub-ntfy-chat-react
+# ntfy-chat-react
 NTFY Chat React Component
