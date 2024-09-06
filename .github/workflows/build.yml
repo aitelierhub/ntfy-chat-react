@@ -33,4 +33,4 @@ jobs:
       - name: Upload Build
         uses: softprops/action-gh-release@v2
         with:
-          path: ./ntfy-chat-react.tar.gz
+          files: ./ntfy-chat-react.tar.gz
