@@ -1,0 +1,34 @@
+name: Demo Builder
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  APP: ntfy-chat-react
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install pnpm
+        run: npm install -g pnpm
+      - name: Build Vite Project
+        run: |
+          pnpm install && pnpm build
+      - name: Tar Vite Project
+        run: tar --exclude='./node_modules' --exclude='./.github' --exclude='./.git' --exclude='./.vscode' --exclude='./ntfy-chat-react.tar.gz' -czf ntfy-chat-react.tar.gz .
+      - name: Upload Build
+        uses: softprops/action-gh-release@v2
+        with:
+          path: ./ntfy-chat-react.tar.gz
