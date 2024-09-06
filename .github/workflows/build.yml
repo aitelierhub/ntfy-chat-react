@@ -26,6 +26,8 @@ jobs:
       - name: Build Vite Project
         run: |
           pnpm install && pnpm build
+      - name: Create fake archive so Tar does not complain
+        run: touch ntfy-chat-react.tar.gz
       - name: Tar Vite Project
         run: tar --exclude='./node_modules' --exclude='./.github' --exclude='./.git' --exclude='./.vscode' --exclude='./ntfy-chat-react.tar.gz' -czf ntfy-chat-react.tar.gz .
       - name: Upload Build
