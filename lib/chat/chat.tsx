@@ -21,9 +21,9 @@ const StyledHeader = styled.div`
   display: flex;
   justify-content: space-between;
   padding: 10px;
-  border-bottom: var(--border);
   background: #eee;
   color: #666;
+  cursor: pointer;
 `
 const StyledHeaderTitle = styled.div`
 
@@ -32,11 +32,11 @@ interface Props {
     onHeaderClick: () => void
     title: string
     user: string
-    room: string
     iconSource: 'pixel' | 'initials'
     translation?: Translation
     styles?: Partial<Styles>
     pulldown?: JSX.Element
+    connectionParams: Partial<ConnectionParams>;
 }
 export interface Translation {
     send: string
@@ -54,9 +54,17 @@ export interface Styles {
     sendButtonBackgroundColor: string;
     sendButtonTextColor: string;
 }
-export const Chat = ({ room, title, user, onHeaderClick, iconSource, translation, styles, pulldown }: Props) => {
+export interface ConnectionParams {
+    room: string
+    protocol: string
+    // example: ntfy.sh
+    server: string
+    pollrate: number
+    since: string
+}
+export const Chat = ({ title, user, onHeaderClick, iconSource, translation, styles, pulldown, connectionParams: { protocol = 'https://', server = 'https://ntfy.sh', pollrate = 1, room = 'ntfydemochatroom', since = '10m' } }: Props) => {
     const [messages, setMessages] = useState<MessageProps[]>([])
-    
+
     const addMessage = useCallback((message: MessageProps) => {
         setMessages((messages) => {
             return [...messages, message]
@@ -64,7 +72,7 @@ export const Chat = ({ room, title, user, onHeaderClick, iconSource, translation
     }, [setMessages])
     useEffect(() => {
         const ROOM = room || "ntfydemochatroom";
-        const SERVICE = `https://ntfy.sh/${ROOM}/sse`;
+        const SERVICE = `${protocol}${server}/${ROOM}/sse`;
         const eventSource = new EventSource(SERVICE)
         eventSource.onmessage = (e) => {
             const data = JSON.parse(JSON.parse(e.data).message);
@@ -84,11 +92,10 @@ export const Chat = ({ room, title, user, onHeaderClick, iconSource, translation
         return () => {
             eventSource.close()
         }
-    }, [room, user, addMessage, iconSource])
+    }, [room, user, addMessage, iconSource, server, setMessages, protocol])
     useEffect(() => {
         async function getMessages() {
-            const ROOM = room || "ntfydemochatroom";
-            const SERVICE = `https://ntfy.sh/${ROOM}/json?since=10m&poll=1`;
+            const SERVICE = `${protocol}${server}/${room}/json?since=${since}&poll=${pollrate}`;
             const response = await fetch(SERVICE)
             if (response.status === 502) {
                 getMessages()
@@ -129,13 +136,12 @@ export const Chat = ({ room, title, user, onHeaderClick, iconSource, translation
             }
         }
         getMessages()
-    }, [room, user, setMessages, iconSource])
+    }, [room, user, setMessages, iconSource, server, since, pollrate, protocol])
     const sendMessage = useCallback((value: string) => {
         if (!value) {
             return;
         }
-        const ROOM = room || "ntfydemochatroom";
-        const SERVICE = `https://ntfy.sh/${ROOM}`
+        const SERVICE = `${protocol}${server}/${room}`
         fetch(SERVICE, {
             method: "POST",
             headers: {
@@ -146,7 +152,7 @@ export const Chat = ({ room, title, user, onHeaderClick, iconSource, translation
                 user: user
             })
         })
-    }, [user, room])
+    }, [server, user, room, protocol])
     return (
         <>
             <StyledHeader onClick={onHeaderClick}>

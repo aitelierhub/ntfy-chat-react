@@ -6,7 +6,7 @@ function App() {
 
   return (
     <>
-      <Chat room="ntfydemochatroom" title="test" user="test test" iconSource="initials" onHeaderClick={() => {}}></Chat>
+          <Chat connectionParams={{}} title="test" user="test test" iconSource="initials" onHeaderClick={() => { }}></Chat>
     </>
   )
 }
