@@ -19,12 +19,13 @@ const StyledChat = styled.div`
     background-color: #ddd;
   }
 `
-const StyledHeader = styled.div`
+const StyledHeader = styled.div<{ styles: Partial<Styles> }>`
   display: flex;
   justify-content: space-between;
   padding: 10px;
-  background: #eee;
-  color: #666;
+  background: ${({ styles }) => styles.headerColor ?? '#eee'};
+  color: ${({ styles }) => styles.headerTextColor ?? '#666'};
+  font-weight: ${({ styles }) => styles.headerFontWeight ?? 'normal'};
   cursor: pointer;
 `
 const StyledHeaderTitle = styled.div`
@@ -47,6 +48,7 @@ export interface Translation {
 export interface Styles {
     headerColor: string;
     headerTextColor: string;
+    headerFontWeight: 'bold' | 'normal';
     messageBackgroundColor: string;
     messageTextColor: string;
     ownMessageBackgroundColor: string;
@@ -157,7 +159,7 @@ export const Chat = ({ title, user, onHeaderClick, iconSource, translation, styl
     }, [server, user, room, protocol])
     return (
         <>
-            <StyledHeader onClick={onHeaderClick}>
+            <StyledHeader styles={styles ?? {}} onClick={onHeaderClick}>
                 <StyledHeaderTitle>{title}</StyledHeaderTitle>
                 {pulldown}
             </StyledHeader>
