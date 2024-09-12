@@ -6,6 +6,8 @@ const StyledChat = styled.div`
     width: 100%;
   flex: 1;
   overflow-y: auto;
+  box-sizing: border-box;
+  border: 1px solid #eee;
 
   &::-webkit-scrollbar {
     width: 6px;
