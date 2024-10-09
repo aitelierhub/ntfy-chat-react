@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { Input } from "../input/input";
 import { Message, MessageProps } from "../message/message";
@@ -33,6 +33,7 @@ const StyledHeaderTitle = styled.div`
 `
 interface Props {
     onHeaderClick: () => void
+    setNotificationCount: Dispatch<SetStateAction<number>>
     title: string
     user: string
     iconSource: 'pixel' | 'initials'
@@ -40,6 +41,7 @@ interface Props {
     styles?: Partial<Styles>
     pulldown?: JSX.Element
     connectionParams: Partial<ConnectionParams>;
+    open?: boolean
 }
 export interface Translation {
     send: string
@@ -66,7 +68,7 @@ export interface ConnectionParams {
     pollrate: number
     since: string
 }
-export const Chat = ({ title, user, onHeaderClick, iconSource, translation, styles, pulldown, connectionParams: { protocol = 'https://', server = 'https://ntfy.sh', pollrate = 1, room = 'ntfydemochatroom', since = '10m' } }: Props) => {
+export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, iconSource, translation, styles, pulldown, connectionParams: { protocol = 'https://', server = 'ntfy.sh', pollrate = 1, room = 'ntfydemochatroom153', since = '10m' } }: Props) => {
     const [messages, setMessages] = useState<MessageProps[]>([])
 
     const addMessage = useCallback((message: MessageProps) => {
@@ -91,12 +93,20 @@ export const Chat = ({ title, user, onHeaderClick, iconSource, translation, styl
                 message: data.message
             }
             addMessage(message)
+            if (data.user !== user) {
+                setNotificationCount((count) => count + 1)
+            }
         }
 
         return () => {
             eventSource.close()
         }
-    }, [room, user, addMessage, iconSource, server, setMessages, protocol])
+    }, [room, user, addMessage, iconSource, server, setMessages, protocol, setNotificationCount])
+    useEffect(() => {
+        if (open) {
+            setNotificationCount(0)
+        }
+    }, [open, setNotificationCount])
     useEffect(() => {
         async function getMessages() {
             const SERVICE = `${protocol}${server}/${room}/json?since=${since}&poll=${pollrate}`;

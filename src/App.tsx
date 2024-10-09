@@ -6,7 +6,7 @@ function App() {
 
   return (
     <>
-          <Chat connectionParams={{}} title="test" user="test test" iconSource="initials" onHeaderClick={() => { }}></Chat>
+          <Chat setNotificationCount={() => { }} connectionParams={{}} title="test" user="test test" iconSource="initials" onHeaderClick={() => { }}></Chat>
     </>
   )
 }
