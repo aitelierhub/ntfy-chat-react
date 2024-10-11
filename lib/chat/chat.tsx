@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState, WheelEventHandler } from "react";
 import styled from "styled-components";
 import { Input } from "../input/input";
 import { Message, MessageProps } from "../message/message";
@@ -98,16 +98,11 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
             if (data.user !== user) {
                 setNotificationCount((count) => count + 1)
                 if (chat !== null && chat.current !== null) {
-                    if (Math.abs(chat.current.scrollHeight - (chat.current.scrollTop + chat.current.clientHeight)) < 10) {
+                    if (Math.abs(chat.current.scrollHeight - (chat.current.scrollTop + chat.current.clientHeight)) < 50) {
                         setIsScrolled(false)
                     } else {
                         setIsScrolled(true)
                     }
-                }
-            } else {
-                if (chat !== null && chat.current !== null) {
-                    chat.current.scrollTop = chat.current.scrollHeight;
-                    setIsScrolled(false)
                 }
             }
         }
@@ -116,6 +111,7 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
             eventSource.close()
         }
     }, [room, user, addMessage, iconSource, server, setMessages, protocol, setNotificationCount, chat])
+
     // used to generate fake messages(does not trigger events that happen on recieving a message, so only use for checking how something looks with full chat)
     // useEffect(() => {
     //     const tm = setInterval(() => {
@@ -143,6 +139,12 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
             }
         }
     }, [open, setNotificationCount])
+    useEffect(() => {
+        if (chat !== null && chat.current !== null && messages.length > 1 && messages[messages.length - 1].fullName === user) {
+            chat.current.scrollTop = chat.current.scrollHeight + 1500;
+            setIsScrolled(false)
+        }
+    }, [messages, chat, user])
     useEffect(() => {
         async function getMessages() {
             const SERVICE = `${protocol}${server}/${room}/json?since=${since}&poll=${pollrate}`;
@@ -204,16 +206,19 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
             })
         })
     }, [server, user, room, protocol])
-    const onScroll = useCallback((event: SyntheticEvent) => {
+    const onScroll: WheelEventHandler = (event) => {
         if (event.target !== null && chat.current !== null) {
             const target = chat.current
-            if (Math.abs(target.scrollHeight - (target.scrollTop + target.clientHeight)) < 10) {
+            console.log(event.deltaY)
+            const positionCheckIfScrolled = (target.scrollHeight - (target.scrollTop + target.clientHeight + event.deltaY) < 50 && event.deltaY > 0 && isScrolled)
+            const positionCheck = (target.scrollHeight - (target.scrollTop + target.clientHeight + event.deltaY) < 50 && event.deltaY > 0 && !isScrolled)
+            if (positionCheckIfScrolled || positionCheck) {
                 setIsScrolled(false)
             } else {
                 setIsScrolled(true)
             }
         }
-    }, [setIsScrolled])
+    }
     return (
         <>
             <StyledHeader styles={styles ?? {}} onClick={onHeaderClick}>
