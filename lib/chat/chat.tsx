@@ -199,7 +199,8 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
             },
             body: JSON.stringify({
                 message: value,
-                user: user
+                user: user,
+                time: Date.now()
             })
         })
     }, [server, user, room, protocol])
