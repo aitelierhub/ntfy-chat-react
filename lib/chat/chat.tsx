@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { Input } from "../input/input";
 import { Message, MessageProps } from "../message/message";
@@ -70,7 +70,8 @@ export interface ConnectionParams {
 }
 export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, iconSource, translation, styles, pulldown, connectionParams: { protocol = 'https://', server = 'ntfy.sh', pollrate = 1, room = 'ntfydemochatroom153', since = '10m' } }: Props) => {
     const [messages, setMessages] = useState<MessageProps[]>([])
-
+    const [isScrolled, setIsScrolled] = useState(false)
+    const chat = useRef<HTMLDivElement>(null)
     const addMessage = useCallback((message: MessageProps) => {
         setMessages((messages) => {
             return [...messages, message]
@@ -93,18 +94,53 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
                 message: data.message
             }
             addMessage(message)
+
             if (data.user !== user) {
                 setNotificationCount((count) => count + 1)
+                if (chat !== null && chat.current !== null) {
+                    if (Math.abs(chat.current.scrollHeight - (chat.current.scrollTop + chat.current.clientHeight)) < 10) {
+                        setIsScrolled(false)
+                    } else {
+                        setIsScrolled(true)
+                    }
+                }
+            } else {
+                if (chat !== null && chat.current !== null) {
+                    chat.current.scrollTop = chat.current.scrollHeight;
+                    setIsScrolled(false)
+                }
             }
         }
 
         return () => {
             eventSource.close()
         }
-    }, [room, user, addMessage, iconSource, server, setMessages, protocol, setNotificationCount])
+    }, [room, user, addMessage, iconSource, server, setMessages, protocol, setNotificationCount, chat])
+    // used to generate fake messages(does not trigger events that happen on recieving a message, so only use for checking how something looks with full chat)
+    // useEffect(() => {
+    //     const tm = setInterval(() => {
+    //         addMessage({
+    //             side: "left",
+    //             picture: ``,
+    //             name: "test",
+    //             fullName: "test",
+    //             time: 0,
+    //             message: `test ${Date.now()}`,
+    //             type: "test"
+    //         })
+    //     }, 1000);
+
+
+    //     return () => {
+    //         clearInterval(tm)
+    //     }
+    // }, [addMessage])
     useEffect(() => {
         if (open) {
             setNotificationCount(0)
+            if (chat !== null && chat.current !== null) {
+                chat.current.scrollTop = chat.current.scrollHeight
+            }
         }
     }, [open, setNotificationCount])
     useEffect(() => {
@@ -167,13 +203,23 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
             })
         })
     }, [server, user, room, protocol])
+    const onScroll = useCallback((event: SyntheticEvent) => {
+        if (event.target !== null && chat.current !== null) {
+            const target = chat.current
+            if (Math.abs(target.scrollHeight - (target.scrollTop + target.clientHeight)) < 10) {
+                setIsScrolled(false)
+            } else {
+                setIsScrolled(true)
+            }
+        }
+    }, [setIsScrolled])
     return (
         <>
             <StyledHeader styles={styles ?? {}} onClick={onHeaderClick}>
                 <StyledHeaderTitle>{title}</StyledHeaderTitle>
                 {pulldown}
             </StyledHeader>
-            <StyledChat>
+            <StyledChat ref={chat} onWheel={onScroll} >
                 {messages.map((message, index) => (
                     <Message
                         key={index}
@@ -187,6 +233,36 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
                     />
                 ))}
             </StyledChat>
+            {isScrolled &&
+                <button
+                    style={{
+                        position: 'absolute',
+                        right: '30px',
+                        bottom: '100px',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        background: 'transparent',
+                        alignItems: 'center',
+                        border: '1px solid #ccc'
+                    }}
+                    onClick={() => { chat.current?.scrollTo({ top: chat.current.scrollHeight, behavior: 'smooth' }); setIsScrolled(false) }}
+                >
+                    <svg
+                        style={{
+                            flex: '0 0 30px',
+                            width: '30px',
+                            fill: styles?.headerColor ?? 'white'
+                        }}
+                        viewBox="0 0 25 25"
+                    >
+                        <path d="M7.41 8.59L12 13.17L16.59 8.59L18 10L12 16L6 10L7.41 8.59Z" />
+                    </svg>
+                </button>
+            }
             <Input styles={styles} translation={translation} onSubmit={(value) => sendMessage(value)}></Input>
         </>
     );
