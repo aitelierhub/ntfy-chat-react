@@ -82,6 +82,9 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
         const SERVICE = `${protocol}${server}/${ROOM}/sse`;
         const eventSource = new EventSource(SERVICE)
         eventSource.onmessage = (e) => {
+            if (e.data === "") {
+                return;
+            }
             const data = JSON.parse(JSON.parse(e.data).message);
             const username = data.user === user ? "me" : data.user
             const encodedUser = encodeURIComponent(username)
