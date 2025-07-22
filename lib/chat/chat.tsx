@@ -99,7 +99,6 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
             addMessage(message)
 
             if (data.user !== user) {
-                setNotificationCount((count) => count + 1)
                 if (isScrolled) {
                     setNotificationCount((count) => count + 1)
                 }
@@ -111,6 +110,12 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
                     }
                 }
             }
+            chat.current?.scrollTo({
+                top: chat.current.scrollHeight,
+                behavior: "smooth"
+            })
+            setIsScrolled(false)
+
         }
 
         return () => {
