@@ -100,6 +100,9 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
 
             if (data.user !== user) {
                 setNotificationCount((count) => count + 1)
+                if (isScrolled) {
+                    setNotificationCount((count) => count + 1)
+                }
                 if (chat !== null && chat.current !== null) {
                     if (Math.abs(chat.current.scrollHeight - (chat.current.scrollTop + chat.current.clientHeight)) < 50) {
                         setIsScrolled(false)
