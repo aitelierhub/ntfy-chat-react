@@ -171,6 +171,9 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
                 const message = data.split(/\r?\n/)
                 const messages = message.map((message) => {
                     try {
+                        if (message === "") {
+                            throw new Error("Empty message")
+                        }
                         const data = JSON.parse(JSON.parse(message).message);
                         const username = data.user === user ? "me" : data.user
                         const encodedUser = encodeURIComponent(username)
@@ -183,7 +186,9 @@ export const Chat = ({ title, user, open, onHeaderClick, setNotificationCount, i
                             message: data.message
                         }
                     } catch (error) {
-                        console.error(error)
+                        if (error instanceof Error && error.message !== "Empty message") {
+                            console.error(error.message)
+                        }
                         return {
                             side: "",
                             picture: ``,
